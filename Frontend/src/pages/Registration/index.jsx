@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
-
+import axios from '../../axios'
 import styles from './Login.module.scss';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegister, selectIsAuth } from '../../redux/slices/auth';
@@ -13,8 +13,12 @@ import { Navigate } from "react-router-dom";
 
 export const Registration = () =>
 {
+  const inputFileRef = React.useRef(null)
+  const [imageUrl, setImageUrl] = React.useState('');
   const dispatch = useDispatch()
   const isAuth = useSelector(selectIsAuth)
+  const { status } = useSelector(state => state.authReducer)
+  console.log(status);
   const { register, handleSubmit, formState: { errors, isValid } } = useForm({
     defaultValues: {
       fullName: '',
@@ -23,9 +27,23 @@ export const Registration = () =>
     },
     mode: 'onBlur'
   })
+  const handleChangeFile = async (e) =>
+  {
+    try {
+      const formData = new FormData();
+      const file = e.target.files[0];
+      formData.append('image', file);
+      const { data } = await axios.post('/avatars', formData);
+      setImageUrl(data.url);
+    } catch (err) {
+      console.warn(err)
+      alert('Ошибка при загрузке файла!');
+    }
+  };
   const onSubmit = async (values) =>
   {
-    const data = await dispatch(fetchRegister(values))
+    const sendData = { ...values, avatarUrl: imageUrl }
+    const data = await dispatch(fetchRegister(sendData))
     if (!data.payload) {
       return alert('Не удалось Зарегистрироваться')
     }
@@ -42,8 +60,9 @@ export const Registration = () =>
         Создание аккаунта
       </Typography>
       <form onSubmit={handleSubmit(onSubmit)}>
+        <input ref={inputFileRef} type="file" onChange={handleChangeFile} hidden />
         <div className={styles.avatar}>
-          <Avatar sx={{ width: 100, height: 100 }} />
+          <Avatar src={imageUrl ? imageUrl : ''} onClick={() => inputFileRef.current.click()} sx={{ width: 100, height: 100 }} />
         </div>
         <TextField
           error={Boolean(errors.fullName?.message)}

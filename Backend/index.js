@@ -31,11 +31,24 @@ const storage = multer.diskStorage({
         cb(null, file.originalname);
     },
 });
+const avaStorage = multer.diskStorage({
+    destination: (_, __, cb) =>
+    {
+        cb(null, 'avatars');
+    },
+    filename: (_, file, cb) =>
+    {
+        cb(null, file.originalname);
+    },
+});
+
 
 const upload = multer({ storage });
+const avatar = multer({ storage: avaStorage });
 
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+app.use('/avatars', express.static('avatars'));
 app.use(cors());
 
 // auth
@@ -50,17 +63,24 @@ app.post('/upload', checkAuth, upload.single('image'), (req, res) =>
         url: `/uploads/${req.file.originalname}`,
     })
 });
-
+app.post('/avatars', avatar.single('image'), (req, res) =>
+{
+    res.json({
+        url: `http://localhost:4000/avatars/${req.file.originalname}`,
+    })
+});
 // posts
 app.get('/tags', PostController.getLastTags);
-
 app.get('/posts', PostController.getAll)
+app.get('/posts/popular', PostController.getPopular)
 app.get('/posts/tags', PostController.getLastTags)
 app.get('/posts/:id', PostController.getOne)
 app.post('/posts', checkAuth, postCreateValidation, handleValidationErrors, PostController.create)
 app.patch('/posts/:id', checkAuth, postCreateValidation, handleValidationErrors, PostController.update)
 app.delete('/posts/:id', checkAuth, PostController.remove)
 
+// adding a comment (updating the post);
+app.put('/posts/:id/comments', checkAuth, handleValidationErrors, PostController.addComment);
 app.listen(PORT, (err) =>
 {
     if (err) {

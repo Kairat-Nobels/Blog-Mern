@@ -9,7 +9,8 @@ import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import Skeleton from "@mui/material/Skeleton";
 
-export const CommentsBlock = ({ items, children, isLoading = true }) => {
+export const CommentsBlock = ({ items, home, children, isLoading = true }) =>
+{
   return (
     <SideBlock title="Комментарии">
       <List>
@@ -39,6 +40,7 @@ export const CommentsBlock = ({ items, children, isLoading = true }) => {
           </React.Fragment>
         ))}
       </List>
+      {home && <div style={{ display: "flex", justifyContent: 'center' }}>{home}</div>}
       {children}
     </SideBlock>
   );

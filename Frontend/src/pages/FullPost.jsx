@@ -6,18 +6,29 @@ import { CommentsBlock } from "../components/CommentsBlock";
 import { useParams } from "react-router-dom";
 import axios from '../axios';
 import ReactMarkdown from "react-markdown";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAuthMe, selectIsAuth } from "../redux/slices/auth";
 
 export const FullPost = () =>
 {
   const [data, setData] = useState()
   const [isLoading, setLoading] = useState(true)
   const { id } = useParams()
+  const [authorizedUser, setAuthorizedUser] = React.useState('');
+  const dispatch = useDispatch();
+  const isAuth = useSelector(selectIsAuth);
+  const updateComments = (newComment) =>
+  {
+    setData(prevData => ({
+      ...prevData,
+      comments: [...prevData.comments, newComment]
+    }));
+  };
   useEffect(() =>
   {
     axios.get(`/posts/${id}`).then((res) =>
     {
       setData(res.data);
-      console.log(res.data);
       setLoading(false)
     }).catch((err) =>
     {
@@ -25,6 +36,26 @@ export const FullPost = () =>
       alert("Ошибка при получении сатьи")
     })
   }, [id])
+
+  React.useEffect(() =>
+  {
+    const fetchAuthData = async () =>
+    {
+      try {
+        const action = await dispatch(fetchAuthMe());
+        const authData = action.payload;
+
+        if (Boolean(authData)) {
+          setAuthorizedUser(authData);
+        }
+
+      } catch (error) {
+        console.log('Error:', error);
+      }
+    };
+    fetchAuthData();
+
+  }, [dispatch]);
   if (isLoading) {
     return <Post isLoading={isLoading} />
   }
@@ -38,32 +69,24 @@ export const FullPost = () =>
         user={data.user}
         createdAt={data.createdAt}
         viewsCount={data.viewsCount}
-        commentsCount={3}
+        commentsCount={data.comments ? data.comments.length : 0}
         tags={data.tags}
         isFullPost
       >
         <ReactMarkdown children={data.text} />
       </Post>
       <CommentsBlock
-        items={[
-          {
-            user: {
-              fullName: "Вася Пупкин",
-              avatarUrl: "https://mui.com/static/images/avatar/1.jpg",
-            },
-            text: "Это тестовый комментарий 555555",
-          },
-          {
-            user: {
-              fullName: "Иван Иванов",
-              avatarUrl: "https://mui.com/static/images/avatar/2.jpg",
-            },
-            text: "When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top",
-          },
-        ]}
+        items={data.comments}
         isLoading={false}
       >
-        <Index />
+        <Index
+          updateComments={updateComments}
+          isAuth={isAuth}
+          dbComments={data.comments}
+          authorizedUser={authorizedUser.fullName}
+          id={id}
+          avatar={authorizedUser.avatarUrl}
+        />
       </CommentsBlock>
     </>
   );

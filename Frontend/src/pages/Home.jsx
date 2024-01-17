@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
@@ -15,16 +15,35 @@ export const Home = () =>
   const { posts, tags } = useSelector(state => state.posts)
   const isPostsLoading = posts.status === 'loading';
   const isTagsLoading = tags.status === 'loading';
-
+  const [activeTab, setActiveTab] = useState(0);
+  const [commentsItem, setCommentsItem] = useState([]);
+  const handleChangeTab = (event, newValue) =>
+  {
+    setActiveTab(newValue);
+  };
   useEffect(() =>
   {
-    dispatch(fetchPosts())
-    dispatch(fetchTags())
-  }, [dispatch]);
-
+    if (activeTab === 0) {
+      dispatch(fetchPosts(''));
+    } else {
+      dispatch(fetchPosts('popular'));
+    }
+    dispatch(fetchTags());
+  }, [dispatch, activeTab]);
+  useEffect(() =>
+  {
+    if (posts.items.length > 0) {
+      const allComments = posts.items
+        .map(item => item.comments && item.comments.length > 0 ? item.comments : [])
+        .filter(comments => comments.length > 0)
+        .flat()
+        .slice(0, 15);
+      setCommentsItem(allComments);
+    }
+  }, [posts]);
   return (
     <>
-      <Tabs style={{ marginBottom: 15 }} value={0} aria-label="basic tabs example">
+      <Tabs value={activeTab} onChange={handleChangeTab} style={{ marginBottom: 15 }} aria-label="basic tabs example">
         <Tab label="Новые" />
         <Tab label="Популярные" />
       </Tabs>
@@ -32,6 +51,7 @@ export const Home = () =>
         <Grid xs={8} item>
           {(isPostsLoading ? [...Array(5)] : posts.items).map((obj, index) => isPostsLoading ? <Post key={index} isLoading={true} /> :
             <Post
+              key={obj._id}
               id={obj._id}
               title={obj.title}
               imageUrl={obj.imageUrl}
@@ -39,7 +59,7 @@ export const Home = () =>
               user={obj.user}
               createdAt={obj.createdAt}
               viewsCount={obj.viewsCount}
-              commentsCount={3}
+              commentsCount={obj.comments ? obj.comments.length : 0}
               tags={obj.tags}
               isEditable={userData?._id === obj.user._id}
             />
@@ -48,22 +68,8 @@ export const Home = () =>
         <Grid xs={4} item>
           <TagsBlock items={tags.items} isLoading={isTagsLoading} />
           <CommentsBlock
-            items={[
-              {
-                user: {
-                  fullName: 'Вася Пупкин',
-                  avatarUrl: 'https://mui.com/static/images/avatar/1.jpg',
-                },
-                text: 'Это тестовый комментарий',
-              },
-              {
-                user: {
-                  fullName: 'Иван Иванов',
-                  avatarUrl: 'https://mui.com/static/images/avatar/2.jpg',
-                },
-                text: 'When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top',
-              },
-            ]}
+            items={commentsItem}
+            home={<p style={{ fontSize: '32px', padding: '0 0 25px 0', margin: 0, lineHeight: '10px' }}>.........</p>}
             isLoading={false}
           />
         </Grid>

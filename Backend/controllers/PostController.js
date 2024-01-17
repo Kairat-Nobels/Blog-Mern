@@ -3,14 +3,15 @@ import PostModel from '../models/Post.js'
 export const getLastTags = async (req, res) =>
 {
     try {
-        const posts = await PostModel.find().limit(5).exec();
+        const posts = await PostModel.find().exec();
 
-        const tags = posts
+        const allTags = posts
             .map((obj) => obj.tags)
-            .flat()
-            .slice(0, 5);
+            .flat();
 
-        res.json(tags);
+        const uniqueTags = [...new Set(allTags)].slice(0, 5);
+
+        res.json(uniqueTags);
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -22,7 +23,7 @@ export const getLastTags = async (req, res) =>
 export const getAll = async (req, res) =>
 {
     try {
-        const posts = await PostModel.find().populate('user').exec();
+        const posts = await PostModel.find().populate('user').sort({ createdAt: -1 }).exec();
         res.json(posts);
     } catch (err) {
         console.log(err);
@@ -31,7 +32,18 @@ export const getAll = async (req, res) =>
         });
     }
 };
-
+export const getPopular = async (req, res) =>
+{
+    try {
+        const posts = await PostModel.find().populate('user').sort({ viewsCount: -1 }).exec();
+        res.json(posts);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            message: 'Не удалось получить популярные статьи',
+        });
+    }
+};
 export const getOne = async (req, res) =>
 {
     try {
@@ -64,7 +76,6 @@ export const remove = async (req, res) =>
         const postId = req.params.id;
 
         const doc = await PostModel.findOneAndDelete({ _id: postId });
-
         if (!doc) {
             return res.status(404).json({
                 message: 'Статья не найдена',
@@ -132,3 +143,40 @@ export const update = async (req, res) =>
         });
     }
 };
+
+export const addComment = async (req, res) =>
+{
+    try {
+        const postId = req.params.id;
+
+        const doc = await PostModel.findOneAndUpdate(
+            {
+                _id: postId // find an element by ID;
+            },
+            {   // HERE we indicated WHAT we're trying to update:
+                comments: req.body.comments,
+                fullName: req.body.comments.fullName,
+                avatarUrl: req.body.comments.avatarUrl,
+                text: req.body.text
+            },
+
+            {
+                returnDocument: 'after' // return the UPDATED document;
+            }
+        );
+
+        if (!doc) {
+            res.status(404).json({
+                message: "No such post found for adding the comment!"
+            });
+        }
+
+        res.json({ 'success': true });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Was not able to EDIT this post!"
+        });
+    }
+}

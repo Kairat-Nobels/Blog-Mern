@@ -1,9 +1,9 @@
 import axios from '../../axios'
 const { createSlice, createAsyncThunk } = require("@reduxjs/toolkit")
 
-export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () =>
+export const fetchPosts = createAsyncThunk('posts/fetchPosts', async (id) =>
 {
-    const { data } = await axios.get('/posts')
+    const { data } = await axios.get(id.length > 0 ? '/posts/popular' : '/posts')
     return data;
 })
 export const fetchTags = createAsyncThunk('posts/fetchTags', async () =>

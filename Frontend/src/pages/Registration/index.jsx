@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegister, selectIsAuth } from '../../redux/slices/auth';
 import { useForm } from 'react-hook-form';
 import { Navigate } from "react-router-dom";
+import { Spinner } from '../../components';
 
 export const Registration = () =>
 {
@@ -17,8 +18,7 @@ export const Registration = () =>
   const [imageUrl, setImageUrl] = React.useState('');
   const dispatch = useDispatch()
   const isAuth = useSelector(selectIsAuth)
-  const { status } = useSelector(state => state.authReducer)
-  console.log(status);
+  const status = useSelector(state => state.auth.status)
   const { register, handleSubmit, formState: { errors, isValid } } = useForm({
     defaultValues: {
       fullName: '',
@@ -54,6 +54,7 @@ export const Registration = () =>
   if (isAuth) {
     return <Navigate to={'/'} />
   }
+  if (status === 'loading') return <Spinner />
   return (
     <Paper classes={{ root: styles.root }}>
       <Typography classes={{ root: styles.title }} variant="h5">

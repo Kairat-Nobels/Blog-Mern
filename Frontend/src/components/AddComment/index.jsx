@@ -28,7 +28,6 @@ export const Index = ({ updateComments, isAuth, dbComments, authorizedUser, id, 
         user: { fullName: authorizedUser, avatarUrl: avatar },
         ...text,
       }
-      console.log('new: ', newComment, '\ncomments: ', comments);
       setComments([...comments, newComment]);
       updateComments(newComment)
       const payload = { comments: [...comments, newComment] };

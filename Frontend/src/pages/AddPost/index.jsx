@@ -29,7 +29,6 @@ export const AddPost = () =>
     try {
       const formData = new FormData();
       const file = e.target.files[0];
-      console.log(file);
       formData.append('image', file);
       const { data } = await axios.post('/upload', formData);
       setImageUrl(data.url);
@@ -77,7 +76,7 @@ export const AddPost = () =>
         setTitle(data.title)
         setText(data.text)
         setImageUrl(data.imageUrl)
-        setTags(data.tags)
+        setTags(data.tags.join(','))
       })
         .catch(err =>
         {

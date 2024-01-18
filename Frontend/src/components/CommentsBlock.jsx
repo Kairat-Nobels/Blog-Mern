@@ -40,7 +40,7 @@ export const CommentsBlock = ({ items, home, children, isLoading = true }) =>
           </React.Fragment>
         ))}
       </List>
-      {home && <div style={{ display: "flex", justifyContent: 'center' }}>{home}</div>}
+      {home && items.length > 14 && <div style={{ display: "flex", justifyContent: 'center' }}>{home}</div>}
       {children}
     </SideBlock>
   );
